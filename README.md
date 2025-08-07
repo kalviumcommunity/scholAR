@@ -210,19 +210,7 @@ Content-Type: application/json
 }
 ```
 
-## 🧪 Testing
 
-Run the test suite:
-```bash
-# Backend tests
-pytest backend/tests/
-
-# Frontend tests
-npm test
-
-# Integration tests
-python manage.py test integration
-```
 
 ## 📊 Performance Metrics
 
