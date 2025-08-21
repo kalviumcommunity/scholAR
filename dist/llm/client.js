@@ -36,3 +36,11 @@ export async function chatWithLLMOneShot(prompt) {
     const response = await result.response;
     return response.text();
 }
+// Generic generator for pre-built prompts (used by multi-shot, etc.)
+export async function generateFromPrompt(prompt) {
+    const client = getGeminiClient();
+    const model = client.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+}
