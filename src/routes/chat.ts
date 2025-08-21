@@ -1,37 +1,31 @@
-// src/routes/chat.ts
-import express from "express";
-import { baseSystem, userTemplates, type Persona } from "../llm/prompts.js";
-import { llm } from "../llm/client.js";
+import { Router, Request, Response } from "express";
+import { chatWithLLM } from "../llm/client.js";
 
-const router = express.Router();
+const router = Router();
 
-router.post("/", async (req, res) => {
+interface ChatRequest {
+  persona: string;
+  prompt: string;
+}
+
+router.post("/", async (req: Request<{}, {}, ChatRequest>, res: Response) => {
   try {
-    const { persona, prompt, params } = req.body as {
-      persona: Persona;
-      prompt: string;
-      params?: { temperature?: number; top_p?: number; stop?: string[] };
-    };
+    const { persona, prompt } = req.body;
 
     if (!persona || !prompt) {
-      return res.status(400).json({ error: "persona and prompt are required" });
+      return res.status(400).json({ 
+        error: "Both 'persona' and 'prompt' are required" 
+      });
     }
 
-    const system = baseSystem(persona);
-    const user = userTemplates[persona](prompt);
-
-    const result = await llm.chat({
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user }
-      ],
-      ...(params ?? {})
+    const response = await chatWithLLM(persona, prompt);
+    
+    res.json({ response });
+  } catch (error) {
+    console.error("Error in chat endpoint:", error);
+    res.status(500).json({ 
+      error: "Internal server error" 
     });
-
-    res.json(result);
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "LLM request failed" });
   }
 });
 
