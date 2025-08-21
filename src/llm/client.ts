@@ -1,31 +1,37 @@
-// src/llm/client.ts
-import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-export type ChatMessage = { role: "system" | "user" | "assistant"; content: string };
-export interface ChatOptions {
-  messages: ChatMessage[];
-  temperature?: number;
-  top_p?: number;
-  stop?: string[];
+let genAI: GoogleGenerativeAI | null = null;
+
+function getGeminiClient(): GoogleGenerativeAI {
+  if (!genAI) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error("GEMINI_API_KEY environment variable is missing");
+    }
+    genAI = new GoogleGenerativeAI(apiKey);
+  }
+  return genAI;
 }
 
-const apiKey = process.env.OPENAI_API_KEY;
-const openai = apiKey ? new OpenAI({ apiKey }) : null;
-
-export const llm = {
-  async chat({ messages, temperature = 0.2, top_p = 0.9, stop }: ChatOptions) {
-    if (openai) {
-      const res = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages,
-        temperature,
-        top_p,
-        stop
-      });
-      return { text: res.choices[0].message?.content ?? "" };
-    }
-    // Stub fallback (no API key)
-    const echo = messages.map(m => `${m.role.toUpperCase()}: ${m.content}`).join("\n");
-    return { text: `🤖 [Stubbed ScholAR]\n${echo}\n\n(Set OPENAI_API_KEY to get real outputs)` };
-  }
+// Map personas to system prompts
+const personas: Record<string, string> = {
+  literature: "You are a research literature reviewer. Summarize and analyze academic papers.",
+  analyst: "You are a data analyst. Interpret data and provide insights.",
+  citation: "You are a citation manager. Format and suggest references.",
+  zeroshot: "You are an intelligent assistant. Perform the task requested by the user directly without needing any prior examples.",
 };
+
+export async function chatWithLLM(persona: string, userPrompt: string) {
+  const systemPrompt = personas[persona] || "You are a helpful AI assistant.";
+
+  const client = getGeminiClient();
+  const model = client.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+  // Combine system prompt and user prompt for Gemini
+  const combinedPrompt = `${systemPrompt}\n\nUser: ${userPrompt}`;
+
+  const result = await model.generateContent(combinedPrompt);
+  const response = await result.response;
+  
+  return response.text();
+}

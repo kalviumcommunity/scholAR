@@ -1,0 +1,29 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
+let genAI = null;
+function getGeminiClient() {
+    if (!genAI) {
+        const apiKey = process.env.GEMINI_API_KEY;
+        if (!apiKey) {
+            throw new Error("GEMINI_API_KEY environment variable is missing");
+        }
+        genAI = new GoogleGenerativeAI(apiKey);
+    }
+    return genAI;
+}
+// Map personas to system prompts
+const personas = {
+    literature: "You are a research literature reviewer. Summarize and analyze academic papers.",
+    analyst: "You are a data analyst. Interpret data and provide insights.",
+    citation: "You are a citation manager. Format and suggest references.",
+    zeroshot: "You are an intelligent assistant. Perform the task requested by the user directly without needing any prior examples.",
+};
+export async function chatWithLLM(persona, userPrompt) {
+    const systemPrompt = personas[persona] || "You are a helpful AI assistant.";
+    const client = getGeminiClient();
+    const model = client.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // Combine system prompt and user prompt for Gemini
+    const combinedPrompt = `${systemPrompt}\n\nUser: ${userPrompt}`;
+    const result = await model.generateContent(combinedPrompt);
+    const response = await result.response;
+    return response.text();
+}
