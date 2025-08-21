@@ -1,19 +1,21 @@
 import { Router, Request, Response } from "express";
 import { chainOfThoughtPrompt, type AskResponse } from "../utils/prompts.js";
+import { buildPrompt, type PromptMode } from "../utils/promptBuilder.js";
 import { generateFromPrompt } from "../llm/client.js";
 
 const router = Router();
 
-interface AskRequestBody { question: string }
+interface AskRequestBody { question: string; mode?: PromptMode }
 
 router.post("/", async (req: Request<{}, {}, AskRequestBody>, res: Response) => {
   try {
-    const { question } = req.body || {} as AskRequestBody;
+    const { question, mode } = req.body || {} as AskRequestBody;
     if (!question || typeof question !== "string" || question.trim().length === 0) {
       return res.status(400).json({ error: "'question' is required" });
     }
 
-    const prompt = chainOfThoughtPrompt(question);
+    const selected: PromptMode = (mode && ["default","exam","study","explainLike5"].includes(mode) ? mode : "default") as PromptMode;
+    const prompt = buildPrompt(question, selected);
     const raw = await generateFromPrompt(prompt);
 
     // Parse the model output expecting "Final Answer:" and "Explanation:" sections
