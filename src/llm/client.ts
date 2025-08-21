@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { oneShotPrompt } from "./prompts.js";
 
 let genAI: GoogleGenerativeAI | null = null;
 
@@ -33,5 +34,17 @@ export async function chatWithLLM(persona: string, userPrompt: string) {
   const result = await model.generateContent(combinedPrompt);
   const response = await result.response;
   
+  return response.text();
+}
+
+export async function chatWithLLMOneShot(prompt: string): Promise<string> {
+  const client = getGeminiClient();
+  const model = client.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+  const builtPrompt = oneShotPrompt(prompt);
+
+  const result = await model.generateContent(builtPrompt);
+  const response = await result.response;
+
   return response.text();
 }

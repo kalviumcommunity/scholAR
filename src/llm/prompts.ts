@@ -23,3 +23,19 @@ Return: (1) approach, (2) metrics, (3) risks/assumptions, (4) expected outputs.`
     `Produce a correct BibTeX entry for: ${work}.
 If multiple candidates exist, pick the most likely and note ambiguity in one line.`
 };
+
+// One-shot prompt builder: prepends an example Q&A pair before the actual user prompt
+export function oneShotPrompt(userPrompt: string): string {
+  const example = [
+    "Example:",
+    "Q: Summarize the role of AI in education.",
+    "A: AI in education personalizes learning, automates grading, and provides adaptive feedback for students.",
+  ].join("\n");
+
+  return [
+    example,
+    "",
+    `Q: ${userPrompt}`,
+    "A:",
+  ].join("\n");
+}

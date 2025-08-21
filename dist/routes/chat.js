@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { chatWithLLM } from "../llm/client.js";
+import { chatWithLLM, chatWithLLMOneShot } from "../llm/client.js";
 const router = Router();
 router.post("/", async (req, res) => {
     try {
@@ -20,3 +20,22 @@ router.post("/", async (req, res) => {
     }
 });
 export default router;
+// One-shot prompting endpoint
+router.post("/one-shot", async (req, res) => {
+    try {
+        const { prompt } = req.body;
+        if (!prompt) {
+            return res.status(400).json({
+                error: "'prompt' is required"
+            });
+        }
+        const response = await chatWithLLMOneShot(prompt);
+        res.json({ response });
+    }
+    catch (error) {
+        console.error("Error in one-shot endpoint:", error);
+        res.status(500).json({
+            error: "Internal server error"
+        });
+    }
+});
