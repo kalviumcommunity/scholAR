@@ -27,4 +27,13 @@
   @apply bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow;
 }
 
+/* Temperature slider styling */
+.slider::-webkit-slider-thumb {
+  @apply appearance-none w-5 h-5 bg-blue-600 rounded-full cursor-pointer shadow-lg hover:bg-blue-700 transition-colors;
+}
+
+.slider::-moz-range-thumb {
+  @apply w-5 h-5 bg-blue-600 rounded-full cursor-pointer shadow-lg border-0 hover:bg-blue-700 transition-colors;
+}
+
 

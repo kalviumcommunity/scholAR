@@ -5,18 +5,19 @@ import { generateFromPrompt } from "../llm/client.js";
 
 const router = Router();
 
-interface AskRequestBody { question: string; mode?: PromptMode }
+interface AskRequestBody { question: string; mode?: PromptMode; temperature?: number }
 
 router.post("/", async (req: Request<{}, {}, AskRequestBody>, res: Response) => {
   try {
-    const { question, mode } = req.body || {} as AskRequestBody;
+    const { question, mode, temperature } = req.body || {} as AskRequestBody;
     if (!question || typeof question !== "string" || question.trim().length === 0) {
       return res.status(400).json({ error: "'question' is required" });
     }
 
     const selected: PromptMode = (mode && ["default","exam","study","explainLike5"].includes(mode) ? mode : "default") as PromptMode;
+    const selectedTemperature = typeof temperature === "number" ? Math.max(0, Math.min(2, temperature)) : 1.0;
     const prompt = buildPrompt(question, selected);
-    const raw = await generateFromPrompt(prompt);
+    const raw = await generateFromPrompt(prompt, selectedTemperature);
 
     // Parse the model output expecting "Final Answer:" and "Explanation:" sections
     const finalPrefix = "Final Answer:";
