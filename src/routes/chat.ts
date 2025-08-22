@@ -6,11 +6,12 @@ const router = Router();
 interface ChatRequest {
   persona: string;
   prompt: string;
+  temperature?: number;
 }
 
 router.post("/", async (req: Request<{}, {}, ChatRequest>, res: Response) => {
   try {
-    const { persona, prompt } = req.body;
+    const { persona, prompt, temperature } = req.body;
 
     if (!persona || !prompt) {
       return res.status(400).json({ 
@@ -18,7 +19,8 @@ router.post("/", async (req: Request<{}, {}, ChatRequest>, res: Response) => {
       });
     }
 
-    const response = await chatWithLLM(persona, prompt);
+    const selectedTemperature = typeof temperature === "number" ? Math.max(0, Math.min(2, temperature)) : 1.0;
+    const response = await chatWithLLM(persona, prompt, selectedTemperature);
     
     res.json({ response });
   } catch (error) {
@@ -32,9 +34,9 @@ router.post("/", async (req: Request<{}, {}, ChatRequest>, res: Response) => {
 export default router;
 
 // One-shot prompting endpoint
-router.post("/one-shot", async (req: Request<{}, {}, { prompt: string }>, res: Response) => {
+router.post("/one-shot", async (req: Request<{}, {}, { prompt: string; temperature?: number }>, res: Response) => {
   try {
-    const { prompt } = req.body;
+    const { prompt, temperature } = req.body;
 
     if (!prompt) {
       return res.status(400).json({
@@ -42,7 +44,8 @@ router.post("/one-shot", async (req: Request<{}, {}, { prompt: string }>, res: R
       });
     }
 
-    const response = await chatWithLLMOneShot(prompt);
+    const selectedTemperature = typeof temperature === "number" ? Math.max(0, Math.min(2, temperature)) : 1.0;
+    const response = await chatWithLLMOneShot(prompt, selectedTemperature);
     res.json({ response });
   } catch (error) {
     console.error("Error in one-shot endpoint:", error);
